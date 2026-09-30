@@ -1,0 +1,3018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Momcozy 子品牌产品思维导图（一级类目版）</title>
+<style>
+:root {
+  --bg: #F7F3EE;
+  --text: #3A3028;
+  --muted: #8A7E72;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow: hidden;
+}
+#canvas { width: 100vw; height: 100vh; cursor: grab; overflow: hidden; position: relative; }
+#canvas:active { cursor: grabbing; }
+#world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+#links { position: absolute; overflow: visible; pointer-events: none; }
+#nodes { position: absolute; left: 0; top: 0; }
+
+.node {
+  position: absolute;
+  display: inline-flex; align-items: center; gap: 7px;
+  white-space: nowrap;
+  border-radius: 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: left .3s ease, top .3s ease;
+  padding: 6px 14px;
+  font-size: 13px;
+  background: #FFFDFB;
+  border: 1px solid #E5DCD3;
+  box-shadow: 0 1px 2px rgba(58,48,40,0.04);
+  z-index: 2;
+}
+.node:hover { box-shadow: 0 3px 8px rgba(58,48,40,0.12); z-index: 5; }
+
+.t-root {
+  background: #3A3028; color: #FFF; font-size: 16px; font-weight: 600;
+  padding: 11px 20px; border-radius: 22px; border: none;
+}
+.t-brand {
+  background: var(--c); color: #FFF; font-size: 14.5px; font-weight: 600;
+  padding: 8px 16px; border-radius: 17px; border: none;
+}
+.t-cat1 {
+  background: #FFF; border: 1.5px solid var(--c);
+  font-size: 13px; font-weight: 500; padding: 5px 12px;
+  border-radius: 12px;
+}
+.t-cat1 .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--c); flex: none;
+}
+.t-cat2 {
+  background: #FFFDFB; border: 1px solid var(--c);
+  font-size: 12.5px; font-weight: 500; padding: 4px 11px;
+  border-radius: 11px;
+}
+.t-cat3 {
+  background: var(--c); color: #FFF;
+  font-size: 12.5px; font-weight: 700; padding: 4px 12px;
+  border: none; border-radius: 11px;
+  box-shadow: 0 3px 10px rgba(58,48,40,0.22);
+}
+.t-l1 {
+  background: #F6F1EC; border: 1px dashed #D6CABC;
+  font-size: 12px; padding: 3px 10px; color: #6B5F55;
+  border-radius: 11px;
+}
+.t-l2 {
+  background: #F1EBE4; border: 1px dotted #D6CABC;
+  font-size: 11.5px; padding: 2px 9px; color: #7A6E63;
+  border-radius: 10px;
+}
+.badge.cnt {
+  font-size: 9.5px; line-height: 1;
+  padding: 1.5px 5px; border-radius: 7px;
+  background: transparent; color: inherit;
+  flex: none; font-weight: 400; opacity: 0.55;
+}
+.t-root .badge.cnt, .t-brand .badge.cnt { background: rgba(255,255,255,0.18); opacity: 0.9; }
+.badge.fold {
+  font-size: 10px; line-height: 1;
+  flex: none; font-weight: 700;
+  background: transparent; color: var(--c);
+  padding: 1px 0 1px 4px; opacity: 0.7;
+  transition: transform .15s;
+}
+.t-cat3 .badge.fold { color: #FFF; opacity: 0.9; }
+.t-cat3 .badge.cnt { opacity: 0.85; }
+
+.lv {
+  font-size: 9px; line-height: 1; letter-spacing: .5px;
+  padding: 2px 5px; border-radius: 5px;
+  background: rgba(0,0,0,0.055); color: var(--c);
+  font-weight: 700; flex: none;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.t-cat3 .lv { background: rgba(255,255,255,0.92); color: var(--c); border: none; font-size: 9.5px; }
+.t-l1 .lv, .t-l2 .lv { background: transparent; border: 1px dashed #C9BEB2; color: #8A7E72; font-weight: 600; }
+
+#hud {
+  position: fixed; left: 20px; top: 16px; z-index: 100;
+  background: rgba(255,253,251,0.93); border: 1px solid #E8DFD6;
+  border-radius: 12px; padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(58,48,40,0.06);
+  max-width: 470px;
+}
+#hud h1 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+#hud p { font-size: 11px; color: var(--muted); line-height: 1.5; margin-bottom: 7px; }
+.legend { display: flex; flex-direction: column; gap: 3px; }
+.legend .lg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #5A5048; }
+.legend .sw { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+#controls {
+  position: fixed; right: 20px; bottom: 20px; z-index: 100;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.btn {
+  min-width: 74px; height: 34px;
+  border-radius: 17px; border: 1px solid #E5DCD3;
+  background: #FFFDFB; color: var(--text);
+  font-size: 12px; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 12px;
+}
+.btn:hover { background: #FFF6EF; }
+.btn.round { min-width: 34px; width: 34px; border-radius: 50%; font-size: 17px; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <h1>Momcozy 子品牌 × 产品 思维导图 <span style="color:#A98467;font-weight:400;" id="versionTag">· V8（一级类目版）</span></h1>
+  <p id="hudMeta">子品牌 → 一级类目 → 二级类目 → 三级类目（隐藏）→ L1 场景（隐藏）→ L2 场景（隐藏）<br>点击节点折叠/展开 · 拖拽平移 · 滚轮缩放</p>
+  <div class="legend">
+    <div class="lg"><span class="sw" style="background:#C05B6C"></span>momcozy 母品牌 · 母婴电器 / 电子电器 / 喂哺用具</div>
+    <div class="lg"><span class="sw" style="background:#7FA88B"></span>momcozy.natural · 快消 / 个护营养</div>
+    <div class="lg"><span class="sw" style="background:#8B93B8"></span>momcozy.life · 其余类目（家纺/服纺/成长耐用/配件/玩具/组合商品）</div>
+  </div>
+</div>
+<div id="canvas">
+  <div id="world">
+    <svg id="links" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="nodes"></div>
+  </div>
+</div>
+<div id="controls">
+  <button class="btn" id="btnScenes">展开全部</button>
+  <button class="btn" id="btnCollapse">收起三级</button>
+  <button class="btn" id="btnReset">适应画面</button>
+  <button class="btn round" id="btnIn">+</button>
+  <button class="btn round" id="btnOut">−</button>
+</div>
+<script>
+const RAW = [
+ {
+  "name": "momcozy",
+  "type": "brand",
+  "color": "#C05B6C",
+  "side": "right",
+  "count": 121,
+  "children": [
+   {
+    "name": "母婴电器",
+    "type": "cat1",
+    "count": 108,
+    "children": [
+     {
+      "name": "护理电器",
+      "type": "cat2",
+      "count": 39,
+      "children": [
+       {
+        "name": "吸鼻器",
+        "type": "cat3",
+        "count": 10,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 10,
+          "children": [
+           {
+            "name": "鼻腔口腔护理",
+            "type": "l2",
+            "count": 10
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "盆底肌修复仪",
+        "type": "cat3",
+        "count": 5,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 5,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 5
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "电动摇椅",
+        "type": "cat3",
+        "count": 4,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 4,
+          "children": [
+           {
+            "name": "宝宝睡眠与安抚",
+            "type": "l2",
+            "count": 4
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "按摩仪",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "红光乳垫",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "光疗仪",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           },
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "婴儿监护器-血氧",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "宝宝日常健康监测",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "毛巾加热桶",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "磨甲器",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "湿巾加热盒",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "冲洗器",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "雾化器",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "鼻腔口腔护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "坐浴护理仪",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "神经干预设备",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "腰腹按摩仪",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "全身电极贴片",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "耳温枪",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "宝宝日常健康监测",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "深层静电震荡",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "白噪音机器",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "宝宝睡眠与安抚",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "喂哺电器",
+      "type": "cat2",
+      "count": 37,
+      "children": [
+       {
+        "name": "吸奶器",
+        "type": "cat3",
+        "count": 18,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 18,
+          "children": [
+           {
+            "name": "母乳喂养",
+            "type": "l2",
+            "count": 18
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "暖奶器",
+        "type": "cat3",
+        "count": 7,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 7,
+          "children": [
+           {
+            "name": "母乳喂养",
+            "type": "l2",
+            "count": 7
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "辅食机",
+        "type": "cat3",
+        "count": 4,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 4,
+          "children": [
+           {
+            "name": "辅食喂养",
+            "type": "l2",
+            "count": 4
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "调奶器",
+        "type": "cat3",
+        "count": 4,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 4,
+          "children": [
+           {
+            "name": "混合/配方奶喂养",
+            "type": "l2",
+            "count": 4
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "冰淇淋机",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "辅食喂养",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "乳汁分析仪",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "母乳喂养",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "吸吮训练器",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "母乳喂养",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "成长监测电器",
+      "type": "cat2",
+      "count": 13,
+      "children": [
+       {
+        "name": "婴儿监视器",
+        "type": "cat3",
+        "count": 6,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 6,
+          "children": [
+           {
+            "name": "宝宝睡眠与安抚",
+            "type": "l2",
+            "count": 6
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "体温计",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "宝宝日常健康监测",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "体重秤",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "宝宝日常健康监测",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "胎心仪",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "宝宝日常健康监测",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "胎教仪",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "清洁电器",
+      "type": "cat2",
+      "count": 7,
+      "children": [
+       {
+        "name": "清洗机",
+        "type": "cat3",
+        "count": 6,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 6,
+          "children": [
+           {
+            "name": "喂养用品清洁与管理",
+            "type": "l2",
+            "count": 6
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "消毒器",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "喂养用品清洁与管理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "环境电器",
+      "type": "cat2",
+      "count": 7,
+      "children": [
+       {
+        "name": "风扇",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "户外活动与防护",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "白噪音机器",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "宝宝睡眠与安抚",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "空气净化器",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "鼻腔口腔护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "加湿器",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "鼻腔口腔护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "康复电器",
+      "type": "cat2",
+      "count": 4,
+      "children": [
+       {
+        "name": "身体修复仪",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "防脱仪",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "腹部疤痕修复",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "激素检测",
+      "type": "cat2",
+      "count": 1,
+      "children": [
+       {
+        "name": "备孕激素检测",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "备孕",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "喂哺用具",
+    "type": "cat1",
+    "count": 13,
+    "children": [
+     {
+      "name": "喂哺容器",
+      "type": "cat2",
+      "count": 9,
+      "children": [
+       {
+        "name": "冻奶壶",
+        "type": "cat3",
+        "count": 4,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 4,
+          "children": [
+           {
+            "name": "母乳储存与管理",
+            "type": "l2",
+            "count": 4
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "奶袋",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "母乳储存与管理",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "集奶碗",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "母乳储存与管理",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "喂哺辅助用品",
+      "type": "cat2",
+      "count": 2,
+      "children": [
+       {
+        "name": "乳盾",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "母乳喂养",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "喂哺餐具",
+      "type": "cat2",
+      "count": 1,
+      "children": [
+       {
+        "name": "乳头保护罩",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "喂哺清洁用品",
+      "type": "cat2",
+      "count": 1,
+      "children": [
+       {
+        "name": "清洁刷",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "喂养用品清洁与管理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "momcozy.natural",
+  "type": "brand",
+  "color": "#7FA88B",
+  "side": "right",
+  "count": 48,
+  "children": [
+   {
+    "name": "个护营养",
+    "type": "cat1",
+    "count": 29,
+    "children": [
+     {
+      "name": "孕期身体护理",
+      "type": "cat2",
+      "count": 20,
+      "children": [
+       {
+        "name": "营养补剂",
+        "type": "cat3",
+        "count": 11,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 10,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 8
+           },
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         },
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "母乳喂养",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "孕期/产后零食",
+        "type": "cat3",
+        "count": 4,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 2
+           },
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         },
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "母乳喂养",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "身体护理霜",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 2
+           },
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "精油",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "头发护理",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "婴儿敏感问题护理",
+      "type": "cat2",
+      "count": 4,
+      "children": [
+       {
+        "name": "婴儿修复霜",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "屁屁膏",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "防摩擦膏",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "哺乳期护理",
+      "type": "cat2",
+      "count": 3,
+      "children": [
+       {
+        "name": "乳房按摩霜/油",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝喂养与营养",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "母乳喂养",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "乳头霜",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "产后修复",
+      "type": "cat2",
+      "count": 2,
+      "children": [
+       {
+        "name": "妊娠纹霜",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "快消",
+    "type": "cat1",
+    "count": 19,
+    "children": [
+     {
+      "name": "婴儿清洁用品",
+      "type": "cat2",
+      "count": 6,
+      "children": [
+       {
+        "name": "湿巾",
+        "type": "cat3",
+        "count": 5,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 5,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 5
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "清洁喷雾",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "妈妈护理用品",
+      "type": "cat2",
+      "count": 4,
+      "children": [
+       {
+        "name": "防溢乳垫",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "护理乳垫",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "水杯",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "出行收纳与护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "婴儿洗浴用品",
+      "type": "cat2",
+      "count": 3,
+      "children": [
+       {
+        "name": "生理盐水",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "鼻腔口腔护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "沐浴炸弹",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "婴儿洗护",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "妈妈洗浴用品",
+      "type": "cat2",
+      "count": 3,
+      "children": [
+       {
+        "name": "妈妈沐浴清洁",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 2
+           },
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "口腔护理用品",
+      "type": "cat2",
+      "count": 1,
+      "children": [
+       {
+        "name": "牙胶",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "鼻腔口腔护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "婴儿护理用品",
+      "type": "cat2",
+      "count": 1,
+      "children": [
+       {
+        "name": "驱蚊手环",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "户外活动与防护",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "激素检测",
+      "type": "cat2",
+      "count": 1,
+      "children": [
+       {
+        "name": "验孕棒",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "备孕",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "momcozy.life",
+  "type": "brand",
+  "color": "#8B93B8",
+  "side": "left",
+  "count": 163,
+  "children": [
+   {
+    "name": "家纺",
+    "type": "cat1",
+    "count": 52,
+    "children": [
+     {
+      "name": "出行纺品",
+      "type": "cat2",
+      "count": 17,
+      "children": [
+       {
+        "name": "背带",
+        "type": "cat3",
+        "count": 11,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 11,
+          "children": [
+           {
+            "name": "日常出行",
+            "type": "l2",
+            "count": 11
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "箱包类",
+        "type": "cat3",
+        "count": 4,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 4,
+          "children": [
+           {
+            "name": "出行收纳与护理",
+            "type": "l2",
+            "count": 4
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "腰凳",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "日常出行",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "支撑纺品",
+      "type": "cat2",
+      "count": 15,
+      "children": [
+       {
+        "name": "孕妇枕",
+        "type": "cat3",
+        "count": 6,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 6,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 6
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "哺乳枕",
+        "type": "cat3",
+        "count": 6,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 6,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 6
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "医用支撑垫",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "安睡起居包裹",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "夹腿枕",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "清洁纺品",
+      "type": "cat2",
+      "count": 11,
+      "children": [
+       {
+        "name": "巾类（包巾）",
+        "type": "cat3",
+        "count": 6,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 6,
+          "children": [
+           {
+            "name": "安睡起居包裹",
+            "type": "l2",
+            "count": 6
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "巾类（浴巾）",
+        "type": "cat3",
+        "count": 4,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 4,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 4
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "巾类（方巾）",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "睡眠纺品",
+      "type": "cat2",
+      "count": 7,
+      "children": [
+       {
+        "name": "襁褓睡袋",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "安睡起居包裹",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "常规床垫",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "智能床垫",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "宝宝睡眠与安抚",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "茧床",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "居家环境纺品",
+      "type": "cat2",
+      "count": 2,
+      "children": [
+       {
+        "name": "应急垫",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "出行收纳与护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "躺卧垫",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "服纺",
+    "type": "cat1",
+    "count": 47,
+    "children": [
+     {
+      "name": "内衣",
+      "type": "cat2",
+      "count": 22,
+      "children": [
+       {
+        "name": "文胸",
+        "type": "cat3",
+        "count": 19,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 19,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 16
+           },
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "内裤",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "塑身服",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "成衣",
+      "type": "cat2",
+      "count": 21,
+      "children": [
+       {
+        "name": "孕妇装",
+        "type": "cat3",
+        "count": 21,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 21,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 13
+           },
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 8
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "服装配件",
+      "type": "cat2",
+      "count": 4,
+      "children": [
+       {
+        "name": "袜子",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "托腹带",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "成长耐用",
+    "type": "cat1",
+    "count": 41,
+    "children": [
+     {
+      "name": "出行坐骑",
+      "type": "cat2",
+      "count": 20,
+      "children": [
+       {
+        "name": "推车",
+        "type": "cat3",
+        "count": 20,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 20,
+          "children": [
+           {
+            "name": "日常出行",
+            "type": "l2",
+            "count": 20
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "家具",
+      "type": "cat2",
+      "count": 17,
+      "children": [
+       {
+        "name": "便携婴儿床",
+        "type": "cat3",
+        "count": 5,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 5,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 5
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "弹跳椅",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "成长启蒙与亲子互动",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "餐椅",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "智能婴儿床",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "宝宝睡眠与安抚",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "常规婴儿床",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "哺乳椅",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "尿布台",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "日常清洁用品",
+      "type": "cat2",
+      "count": 3,
+      "children": [
+       {
+        "name": "尿布桶",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "宝宝日常护理",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "身体护理及清洁",
+            "type": "l2",
+            "count": 2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "沐浴盆",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "家居环境",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "防护耐用",
+      "type": "cat2",
+      "count": 1,
+      "children": [
+       {
+        "name": "隔音耳罩",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "户外活动与防护",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "配件",
+    "type": "cat1",
+    "count": 12,
+    "children": [
+     {
+      "name": "成长耐用配件",
+      "type": "cat2",
+      "count": 12,
+      "children": [
+       {
+        "name": "车类配件（出行收纳与护理）",
+        "type": "cat3",
+        "count": 5,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 5,
+          "children": [
+           {
+            "name": "出行收纳与护理",
+            "type": "l2",
+            "count": 5
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "车类配件（户外活动与防护）",
+        "type": "cat3",
+        "count": 4,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 4,
+          "children": [
+           {
+            "name": "户外活动与防护",
+            "type": "l2",
+            "count": 4
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "车类配件（日常出行）",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "出行",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "日常出行",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "运动与健身",
+    "type": "cat1",
+    "count": 6,
+    "children": [
+     {
+      "name": "运动与健身",
+      "type": "cat2",
+      "count": 6,
+      "children": [
+       {
+        "name": "瑜伽球",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 3
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "女性健康护理器械",
+        "type": "cat3",
+        "count": 2,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 2,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 1
+           },
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "力量训练器材",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "孕期健康照护",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "组合商品",
+    "type": "cat1",
+    "count": 3,
+    "children": [
+     {
+      "name": "快消套装",
+      "type": "cat2",
+      "count": 3,
+      "children": [
+       {
+        "name": "护理套装",
+        "type": "cat3",
+        "count": 3,
+        "children": [
+         {
+          "name": "孕期照护与产后恢复",
+          "type": "l1",
+          "count": 3,
+          "children": [
+           {
+            "name": "产后恢复与自我护理",
+            "type": "l2",
+            "count": 2
+           },
+           {
+            "name": "备孕",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "玩具",
+    "type": "cat1",
+    "count": 2,
+    "children": [
+     {
+      "name": "其他玩具",
+      "type": "cat2",
+      "count": 2,
+      "children": [
+       {
+        "name": "帐篷",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "宝宝睡眠与健康监测",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "宝宝睡眠与安抚",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "陪伴机器人",
+        "type": "cat3",
+        "count": 1,
+        "children": [
+         {
+          "name": "成长启蒙与家庭环境",
+          "type": "l1",
+          "count": 1,
+          "children": [
+           {
+            "name": "成长启蒙与亲子互动",
+            "type": "l2",
+            "count": 1
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+];
+const META = {
+ "version": "一级类目版-V8",
+ "source": "2027三年年规品类&项目定级&场景化匹配-26.9.2 (3).xlsx · sheet2 · 一级类目映射（momcozy=母婴电器/喂哺用具；natural=快消/个护营养；life=其余；个护营养·康复电器→产后修复；腹部疤痕修复移至母婴电器·康复电器）",
+ "products": 332,
+ "paruu": 13,
+ "categories": 11,
+ "cat2": 38,
+ "cat3": 112,
+ "l1": 6,
+ "l2": 18,
+ "brands": {
+  "momcozy 母品牌": {
+   "l1cat": 2,
+   "products": 121
+  },
+  "momcozy.natural": {
+   "l1cat": 2,
+   "products": 48
+  },
+  "momcozy.life": {
+   "l1cat": 7,
+   "products": 163
+  }
+ }
+};
+document.getElementById('hudMeta').innerHTML =
+  '子品牌 → <b>L1类目</b> → <b>L2类目</b> → <b>L3类目</b>（实心品牌色·重点）→ <b>L1场景</b> → <b>L2场景</b> ｜ 共 <b>'+META.categories+'</b> 个一级类目 · <b>'+META.cat2+'</b> 个二级类目 · <b>'+META.cat3+'</b> 个三级类目 · <b>'+META.products+'</b> 个产品'
+  + '（其中 Paruu 13 条按类目归入）· <b>'+META.l1+'</b> L1 · <b>'+META.l2+'</b> L2<br>'
+  + '气泡数字 = 下一层节点数（三级类目与场景默认 1:1，不标数）· 尾部 <b>›</b>/<b>⌄</b> = 折叠/展开箭头 · L3类目为实心品牌色气泡（场景脑图的展开锚点）· 默认展开到二级，逐级点击下钻 · 拖拽平移 · 滚轮缩放';
+const GAPX = 56, SIB = 6, GROUP_GAP = 46;
+
+const nodesLayer = document.getElementById('nodes');
+const linksSvg = document.getElementById('links');
+const world = document.getElementById('world');
+const canvas = document.getElementById('canvas');
+
+const LV_LABEL = { cat1: 'L1类目', cat2: 'L2类目', cat3: 'L3类目', l1: 'L1场景', l2: 'L2场景' };
+
+function makeNode(name, type, color, count) {
+  const n = { name, type, color, count: count || 0, children: [], collapsed: false,
+              x: 0, y: 0, w: 0, h: 0, sh: 0 };
+  const el = document.createElement('div');
+  el.className = 'node t-' + type;
+  el.style.setProperty('--c', color);
+  if (LV_LABEL[type]) {
+    const lv = document.createElement('span');
+    lv.className = 'lv';
+    lv.textContent = LV_LABEL[type];
+    el.appendChild(lv);
+  }
+  const label = document.createElement('span');
+  label.textContent = name;
+  el.appendChild(label);
+  if (type !== 'root') {
+    const cnt = document.createElement('span');
+    cnt.className = 'badge cnt';
+    el.appendChild(cnt);
+  }
+  n.el = el; n.labelEl = label;
+  nodesLayer.appendChild(el);
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!n.children.length) return;
+    n.collapsed = !n.collapsed;
+    layout();
+  });
+  return n;
+}
+
+const root = makeNode('Momcozy 全产品', 'root', '#3A3028', 0);
+const brandNodes = [];
+RAW.forEach(d => {
+  const brand = makeNode(d.name, 'brand', d.color, d.count);
+  root.children.push(brand); brandNodes.push(brand);
+  (d.children || []).forEach(d2 => {              // 一级类目
+    const c1 = makeNode(d2.name, 'cat1', d.color, d2.count);
+    brand.children.push(c1);
+    (d2.children || []).forEach(d3 => {           // 二级类目（默认折叠 → 三级类目隐藏）
+      const c2 = makeNode(d3.name, 'cat2', d.color, d3.count);
+      c2.collapsed = true;
+      c1.children.push(c2);
+      (d3.children || []).forEach(d4 => {         // 三级类目（默认隐藏）
+        const c3 = makeNode(d4.name, 'cat3', d.color, d4.count);
+        c3.collapsed = true;
+        c2.children.push(c3);
+        (d4.children || []).forEach(d5 => {       // L1 场景（默认隐藏）
+          const l1 = makeNode(d5.name, 'l1', d.color, d5.count);
+          l1.collapsed = true;
+          c3.children.push(l1);
+          (d5.children || []).forEach(d6 => {     // L2 场景（叶子）
+            const l2 = makeNode(d6.name, 'l2', d.color, d6.count);
+            l1.children.push(l2);
+          });
+        });
+      });
+    });
+  });
+});
+
+// 测量
+function measure(n) {
+  n.w = n.el.offsetWidth; n.h = n.el.offsetHeight;
+  n.children.forEach(measure);
+}
+root.children.forEach(measure);
+measure(root);
+
+// 分侧：按数据里的 side 字段（母品牌 + natural 右，life 左）
+const rightSide = [], leftSide = [];
+RAW.forEach((d, i) => {
+  (d.side === 'left' ? leftSide : rightSide).push(brandNodes[i]);
+});
+if (!leftSide.length && rightSide.length > 1) leftSide.push(rightSide.pop());
+if (!rightSide.length && leftSide.length > 1) rightSide.push(leftSide.pop());
+
+function sideHeight(side) {
+  return side.reduce((s, n) => s + n.sh, 0) + GROUP_GAP * Math.max(0, side.length - 1);
+}
+
+function measureSh(n) {
+  if (n.collapsed || !n.children.length) { n.sh = n.h; return; }
+  let s = 0;
+  n.children.forEach(c => { measureSh(c); s += c.sh; });
+  n.sh = Math.max(n.h, s + SIB * (n.children.length - 1));
+}
+
+function place(n, x, yCenter, dir) {
+  n.x = x; n.y = yCenter - n.h / 2;
+  n.el.style.left = n.x + 'px';
+  n.el.style.top = n.y + 'px';
+  if (n.collapsed || !n.children.length) return;
+  const total = n.children.reduce((s, c) => s + c.sh, 0) + SIB * (n.children.length - 1);
+  let cur = yCenter - total / 2;
+  n.children.forEach(c => {
+    const cx = dir > 0 ? n.x + n.w + GAPX : n.x - GAPX - c.w;
+    place(c, cx, cur + c.sh / 2, dir);
+    cur += c.sh + SIB;
+  });
+}
+
+function setVisibility(n, visible) {
+  n.el.style.display = visible ? '' : 'none';
+  if (!visible) { n.children.forEach(c => setVisibility(c, false)); return; }
+  if (n.collapsed) { n.children.forEach(c => setVisibility(c, false)); return; }
+  n.children.forEach(c => setVisibility(c, true));
+}
+
+function updateBadges(n) {
+  const hasKids = n.children.length > 0;
+  let badge = n.el.querySelector('.badge.fold');
+  if (hasKids) {
+    if (!badge) { badge = document.createElement('span'); badge.className = 'badge fold'; n.el.appendChild(badge); }
+    badge.textContent = n.collapsed ? '›' : '⌄';
+  } else if (badge) badge.remove();
+  // 数字 = 下一层节点数；1:1 层级（cat3→L1场景、L1→L2场景）默认不标，仅多个时显示
+  const cntEl = n.el.querySelector('.badge.cnt');
+  if (cntEl) {
+    let show = false;
+    if (hasKids) {
+      if (n.type === 'brand' || n.type === 'cat1' || n.type === 'cat2') show = true;
+      else if ((n.type === 'cat3' || n.type === 'l1') && n.children.length > 1) show = true;
+    }
+    cntEl.textContent = show ? n.children.length : '';
+    cntEl.style.display = show ? '' : 'none';
+  }
+  n.children.forEach(updateBadges);
+}
+
+let minX = 0, minY = 0, bboxW = 0, bboxH = 0;
+
+function linkPath(n, c, dir) {
+  const px = dir > 0 ? n.x + n.w : n.x;
+  const py = n.y + n.h / 2;
+  const cx = dir > 0 ? c.x : c.x + c.w;
+  const cy = c.y + c.h / 2;
+  const dx = Math.abs(cx - px) * 0.45;
+  const stroke = (c.type === 'brand' || n.type === 'root') ? c.color : n.color;
+  return `<path d="M ${px - minX} ${py - minY} C ${px - minX + dir * dx} ${py - minY}, ${cx - minX - dir * dx} ${cy - minY}, ${cx - minX} ${cy - minY}" stroke="${stroke}" stroke-width="1.6" fill="none" opacity="0.55"/>`;
+}
+
+function drawLinks(n, dir, paths) {
+  if (n.el.style.display === 'none' || n.collapsed) return paths;
+  n.children.forEach(c => {
+    if (c.el.style.display === 'none') return;
+    paths += linkPath(n, c, dir);
+    paths = drawLinks(c, dir, paths);
+  });
+  return paths;
+}
+
+function layout() {
+  brandNodes.forEach(measureSh);
+  const Hr = sideHeight(rightSide), Hl = sideHeight(leftSide);
+  root.x = 0; root.y = -root.h / 2;
+  root.el.style.left = '0px'; root.el.style.top = root.y + 'px';
+
+  let cur = -Hr / 2;
+  rightSide.forEach(n => { place(n, root.w + GAPX + 20, cur + n.sh / 2, 1); cur += n.sh + GROUP_GAP; });
+  cur = -Hl / 2;
+  leftSide.forEach(n => { place(n, -GAPX - 20 - n.w, cur + n.sh / 2, -1); cur += n.sh + GROUP_GAP; });
+
+  setVisibility(root, true);
+  updateBadges(root);
+
+  minX = Infinity; minY = Infinity; let maxX = -Infinity, maxY = -Infinity;
+  function bbox(n) {
+    if (n.el.style.display === 'none') return;
+    minX = Math.min(minX, n.x); minY = Math.min(minY, n.y);
+    maxX = Math.max(maxX, n.x + n.w); maxY = Math.max(maxY, n.y + n.h);
+    n.children.forEach(bbox);
+  }
+  bbox(root);
+  bboxW = maxX - minX + 80; bboxH = maxY - minY + 80;
+  minX -= 40; minY -= 40;
+
+  linksSvg.setAttribute('width', bboxW);
+  linksSvg.setAttribute('height', bboxH);
+  linksSvg.style.left = minX + 'px';
+  linksSvg.style.top = minY + 'px';
+  let paths = '';
+  if (root.el.style.display !== 'none' && !root.collapsed) {
+    rightSide.forEach(c => {
+      if (c.el.style.display === 'none') return;
+      paths += linkPath(root, c, 1);
+      paths = drawLinks(c, 1, paths);
+    });
+    leftSide.forEach(c => {
+      if (c.el.style.display === 'none') return;
+      paths += linkPath(root, c, -1);
+      paths = drawLinks(c, -1, paths);
+    });
+  }
+  linksSvg.innerHTML = paths;
+}
+
+// ---- pan & zoom ----
+let scale = 1, panX = 0, panY = 0;
+function apply() {
+  world.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+}
+function fit() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  scale = Math.min((vw - 60) / bboxW, (vh - 100) / bboxH, 1);
+  scale = Math.max(scale, 0.35);
+  panX = (vw - bboxW * scale) / 2 - minX * scale;
+  panY = (vh - bboxH * scale) / 2 - minY * scale + 10;
+  apply();
+}
+
+layout();
+fit();
+
+let dragging = false, lx = 0, ly = 0;
+canvas.addEventListener('mousedown', e => { dragging = true; lx = e.clientX; ly = e.clientY; });
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  panX += e.clientX - lx; panY += e.clientY - ly;
+  lx = e.clientX; ly = e.clientY; apply();
+});
+window.addEventListener('mouseup', () => dragging = false);
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const f = e.deltaY > 0 ? 0.9 : 1.1;
+  const ns = Math.min(Math.max(scale * f, 0.2), 2.5);
+  const mx = e.clientX, my = e.clientY;
+  panX = mx - (mx - panX) * (ns / scale);
+  panY = my - (my - panY) * (ns / scale);
+  scale = ns; apply();
+}, { passive: false });
+
+document.getElementById('btnIn').onclick = () => { scale = Math.min(scale * 1.2, 2.5); apply(); };
+document.getElementById('btnOut').onclick = () => { scale = Math.max(scale * 0.83, 0.2); apply(); };
+document.getElementById('btnReset').onclick = () => fit();
+
+document.getElementById('btnScenes').onclick = () => {
+  function walk(n) { n.collapsed = false; n.children.forEach(walk); }
+  walk(root); layout(); fit();
+};
+document.getElementById('btnCollapse').onclick = () => {
+  function walk(n) {
+    if (n.type === 'cat2' || n.type === 'cat3' || n.type === 'l1') n.collapsed = true;
+    n.children.forEach(walk);
+  }
+  walk(root); layout(); fit();
+};
+</script>
+</body>
+</html>
